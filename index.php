@@ -2,6 +2,8 @@
 
 ini_set('display_errors', 1);
 ini_set('display_startup_errors', 1);
+ini_set('allow_url_fopen', true);
+ini_set('allow_url_include', true);
 error_reporting(E_ALL);
 include('simple_html_dom.php');
 
@@ -64,6 +66,8 @@ function backupFotolog($name){
       //CREATE THE DIR TO SAVE POSTS
       mkdir($name, 0777, true);
 
+      mkdir($name . "/img/", 0777, true);
+
       //INDICATE FILE TO WRITE TO
       $file = $name . "/" . $post_name[4] . ".html";
 
@@ -73,9 +77,20 @@ function backupFotolog($name){
       //SAVE CURRENT POST TO FILE
       file_put_contents($file, $post_html);
 
+      //GET CURRENT IMAGE
+      $ch = curl_init($orignal_img_url);
+
+      //DOWNLOAD CURRENT IMAGE
+      $fp = fopen($name . "/" . $new_img_url, 'wb') or die("Can't create file " . $name . "/" . $new_img_url . "<br>");
+      curl_setopt($ch, CURLOPT_FILE, $fp);
+      curl_setopt($ch, CURLOPT_HEADER, 0);
+      curl_exec($ch);
+      curl_close($ch);
+      fclose($fp);
+
       //OUTPUT SUCCESS
       echo "Saved " . $post_name[4] . "<br>";
-      // die();
+      die();
     }
 
 
@@ -84,4 +99,4 @@ function backupFotolog($name){
 
 }
 
-backupFotolog("lalibelula");
+backupFotolog("dayco");
