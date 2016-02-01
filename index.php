@@ -9,7 +9,11 @@ include('simple_html_dom.php');
 
 
 function backupFotolog($name){
-  $fotoCounter = 1;
+  $fotoCounter = 0;
+
+  //GET DATA FROM URL
+  $name = $_GET['fotolog_name'];
+  $total_pages = $_GET['total_pages'];
 
   //INITIALIZE VARS
   $links = [];
@@ -27,7 +31,7 @@ function backupFotolog($name){
   $request = "http://www.fotolog.com/" . $name . "/";
 
   //START PAGE BY PAGE FROM THE MOSAIC
-  for($i=0; $i<=270; $i+=30){
+  for($i=0; $i<=$total_pages; $i+=30){
 
     //SET THE CURRENT PAGE REQUEST URL
     $current = $request . "mosaic/" . $i;
@@ -49,6 +53,7 @@ function backupFotolog($name){
 
     //ITERATE OVER ALL COLLECTED LINKS
     foreach($clean_links as $post_link){
+      echo "<hr>";
 
       //SET THE CURRENT POST NAME
       $post_name = explode('/',$post_link);
@@ -90,7 +95,7 @@ function backupFotolog($name){
           flush();
 
           //IF IS THE FIRST TIME, DOWNLOAD JS FILES
-          if($fotoCounter = 1){
+          if($fotoCounter == 1){
             //DOWNLOAD CURRENT JS
             $ch = curl_init($script);
             $fp = fopen($name . "/js/" . $script_name, 'wb') or print("Can't create file " . $script_name . "<br>");
@@ -131,14 +136,17 @@ function backupFotolog($name){
       foreach($css as $stylesheet){
 
         //IF STYLESHEET IS NOT NULL
-        if($stylesheet){
+        if($stylesheet && $stylesheet != "http://fotolog.com/favicon.ico"){
 
           //GET CURRENT CSS NAME
           $stylesheet_name = explode('/',$stylesheet);
-          $stylesheet_name = $stylesheet_name[4];
+          if($stylesheet_name[4]){
+            $stylesheet_name = $stylesheet_name[4];
+          }
+
 
           //IF IS THE FIRST TIME, DOWNLOAD CSS FILES
-          if($fotoCounter = 1){
+          if($fotoCounter == 1){
             //DOWNLOAD CURRENT CSS
             $ch = curl_init($stylesheet);
             $fp = fopen($name . "/css/" . $stylesheet_name, 'wb') or print("Can't create file " . $stylesheet_name . "<br>");
@@ -172,7 +180,7 @@ function backupFotolog($name){
       $file = $name . "/" . $post_name[4] . ".html";
 
       //OPEN THE FILE TO STORE THE CURRENT PAGE
-      $handle = fopen($file, "w") or die("Can't create file " . $post_name[4] . "<br>");
+      $handle = fopen($file, "w") or print("Can't create file " . $post_name[4] . "<br>");
 
       //SAVE CURRENT POST TO FILE
       file_put_contents($file, $post_html);
@@ -181,7 +189,7 @@ function backupFotolog($name){
       $ch = curl_init($orignal_img_url);
 
       //DOWNLOAD CURRENT IMAGE
-      $fp = fopen($name . "/" . $new_img_url, 'wb') or die("Can't create file " . $name . "/" . $new_img_url . "<br>");
+      $fp = fopen($name . "/" . $new_img_url, 'wb') or print("Can't create file " . $name . "/" . $new_img_url . "<br>");
       curl_setopt($ch, CURLOPT_FILE, $fp);
       curl_setopt($ch, CURLOPT_HEADER, 0);
       curl_exec($ch);
@@ -190,12 +198,16 @@ function backupFotolog($name){
 
       //OUTPUT SUCCESS
       echo "<h1>" . $fotoCounter . "</h1>";
+      echo "<h2>" . $new_img_url . "</h2>";
       flush();
       $fotoCounter++;
-    }
+      flush();
 
+    } //END ITERATE OVER ALL COLLECTED LINKS
+    $fotoCounter++;
+    flush();
 
-  }
+  } //END PAGE BY PAGE FROM THE MOSAIC
 
 
 }
